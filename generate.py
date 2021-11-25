@@ -111,7 +111,6 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
         for paper_dict in paper_dict_list:
             classes = paper_dict['classes']
             classes_print = [x for x in classes if x not in pre_classes]
-            header_index = header_start_index
             for paper_class in classes_print:
                 header_index = classes.index(paper_class) + header_start_index
                 title = '#' * (header_index) + ' ' + paper_class
@@ -120,12 +119,12 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
             paper_info_list = paper_dict['paper_info_list']
             year_list = list(set([paper_info['year'] for paper_info in paper_info_list]))
             for year in reversed(sorted(year_list)):
-                title = '#' * (header_index + 1) + ' ' + year
+                title = '- {year}'.format(year=year)
                 f.write(title)
                 f.write('\n')
                 for paper_info in paper_info_list:
                     if paper_info['year'] == year:
-                        f.write(paper_info['paper_str_md'])
+                        f.write('\t{paper_str_md}'.format(paper_str_md=paper_info['paper_str_md']))
                         f.write('\n')
             pre_classes = classes
 
