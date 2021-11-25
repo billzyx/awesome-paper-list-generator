@@ -92,7 +92,7 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_index=2):
                 f.write('\n')
             paper_str_list = paper_dict['paper_str_list']
             for paper_str in paper_str_list:
-                f.write('- ' + paper_str)
+                f.write(paper_str)
                 f.write('\n')
             pre_classes = classes
 
