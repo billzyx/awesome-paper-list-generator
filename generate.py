@@ -52,7 +52,7 @@ class PaperParser:
             journal = ''
 
         paper_str = '- [{title}]({url}) - {author}, {journal}, ({year})'.format(
-            title=re.sub("[^0-9a-zA-Z ]+", "1", paper_info['title']),
+            title=re.sub("[^0-9a-zA-Z ]+", "", paper_info['title']),
             url=paper_info['url'], author=paper_info['author'],
             journal=journal, year=paper_info['year'])
 
