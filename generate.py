@@ -3,6 +3,7 @@ import argparse
 from title2bib.crossref import get_bib_from_title
 from pdfrw import PdfReader
 from bibtexparser.bparser import BibTexParser
+import re
 
 
 def load_paper_dicts(root_dir):
@@ -23,12 +24,13 @@ class PaperParser:
     def _get_paper_title(self, file_path):
         # Use filename as paper title if get filename from pdf failed.
         reader = PdfReader(file_path)
-        title = str(reader.Info.Title)
-        if title is None or title == '' or title == '()' or title == 'None' or title == '(Untitled)':
-            title = os.path.basename(file_path).replace('.pdf', '')
+        pdf_title = str(reader.Info.Title)
+        if pdf_title is None or pdf_title == '' or pdf_title == '()' or pdf_title == 'None' or pdf_title == '(Untitled)':
+            pdf_title = ''
         else:
-            title = title.strip('()')
-        return title
+            pdf_title = pdf_title.strip('()')
+        file_title = os.path.basename(file_path).replace('.pdf', '')
+        return pdf_title, file_title
 
     def _get_bib_string(self, title):
         _, bib = get_bib_from_title(title, get_first=True, abbrev_journal=False)
@@ -44,54 +46,72 @@ class PaperParser:
     def _get_paper_string_md(self, paper_info):
         if 'journal' in paper_info:
             journal = paper_info['journal'].replace('{', '').replace('}', '')
-        else:
+        elif 'booktitle' in paper_info:
             journal = paper_info['booktitle']
+        else:
+            journal = ''
 
         paper_str = '- [{title}]({url}) - {author}, {journal}, ({year})'.format(
-            title=paper_info['title'].replace('{', '').replace('}', ''),
+            title=re.sub("[^0-9a-zA-Z ]+", "1", paper_info['title']),
             url=paper_info['url'], author=paper_info['author'],
             journal=journal, year=paper_info['year'])
 
         return paper_str
 
     def parse(self, paper_path):
-        paper_title = self._get_paper_title(paper_path)
-        paper_bib = self._get_bib_string(paper_title)
-        paper_info = self._get_paper_info(paper_bib)
+        pdf_title, file_title = self._get_paper_title(paper_path)
+        if pdf_title != '':
+            paper_bib = self._get_bib_string(pdf_title)
+            paper_info = self._get_paper_info(paper_bib)
+            if paper_info['title'] != pdf_title:
+                paper_bib = self._get_bib_string(file_title)
+                paper_info = self._get_paper_info(paper_bib)
+        else:
+            paper_bib = self._get_bib_string(file_title)
+            paper_info = self._get_paper_info(paper_bib)
         paper_str = self._get_paper_string_md(paper_info)
-        return paper_str
+        paper_info['paper_str_md'] = paper_str
+        return paper_info
 
 
 def parse_paper_dicts(paper_dict_list):
     paper_parser = PaperParser()
     for i in range(len(paper_dict_list)):
-        paper_str_list = []
+        paper_info_list = []
         paper_list = paper_dict_list[i]['paper_list']
         for paper_path in paper_list:
             try:
                 paper_str = paper_parser.parse(paper_path)
-                paper_str_list.append(paper_str)
+                paper_info_list.append(paper_str)
             except:
                 print('Error getting paper:', paper_path)
-        paper_dict_list[i]['paper_str_list'] = paper_str_list
+        paper_dict_list[i]['paper_info_list'] = paper_info_list
     return paper_dict_list
 
 
-def generate_output_md(paper_dict_list, output_md='paper.md', header_index=2):
+def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index=2):
     with open(output_md, 'w') as f:
         f.write('## Papers\n')
         pre_classes = ['']
         for paper_dict in paper_dict_list:
             classes = paper_dict['classes']
             classes_print = [x for x in classes if x not in pre_classes]
+            header_index = header_start_index
             for paper_class in classes_print:
-                title = '#' * (classes.index(paper_class) + header_index) + ' ' + paper_class
+                header_index = classes.index(paper_class) + header_start_index
+                title = '#' * (header_index) + ' ' + paper_class
                 f.write(title)
                 f.write('\n')
-            paper_str_list = paper_dict['paper_str_list']
-            for paper_str in paper_str_list:
-                f.write(paper_str)
+            paper_info_list = paper_dict['paper_info_list']
+            year_list = list(set([paper_info['year'] for paper_info in paper_info_list]))
+            for year in reversed(sorted(year_list)):
+                title = '#' * (header_index + 1) + ' ' + year
+                f.write(title)
                 f.write('\n')
+                for paper_info in paper_info_list:
+                    if paper_info['year'] == year:
+                        f.write(paper_info['paper_str_md'])
+                        f.write('\n')
             pre_classes = classes
 
 
@@ -106,13 +126,13 @@ def main():
         default='paper.md',
     )
     ap.add_argument(
-        "--header_index", required=False, type=int,
+        "--header_start_index", required=False, type=int,
         default=2,
     )
     args = vars(ap.parse_args())
     paper_dict_list = load_paper_dicts(args['paper_dir'])
     paper_dict_list = parse_paper_dicts(paper_dict_list)
-    generate_output_md(paper_dict_list, args['output_md'], args['header_index'])
+    generate_output_md(paper_dict_list, args['output_md'], args['header_start_index'])
 
 
 if __name__ == '__main__':
