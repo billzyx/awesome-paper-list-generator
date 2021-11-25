@@ -104,8 +104,13 @@ def parse_paper_dicts(paper_dict_list):
     return paper_dict_list
 
 
-def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index=2):
+def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index=2,
+                       before_md='before.md', after_md='after.md'):
     with open(output_md, 'w') as f:
+        if os.path.isfile(before_md):
+            with open(before_md, 'r') as fb:
+                lines = fb.readlines()
+                f.writelines(lines)
         f.write('## Papers\n')
         pre_classes = ['']
         for paper_dict in paper_dict_list:
@@ -128,6 +133,11 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
                         f.write('\n')
             pre_classes = classes
 
+        if os.path.isfile(after_md):
+            with open(after_md, 'r') as fa:
+                lines = fa.readlines()
+                f.writelines(lines)
+
 
 def main():
     global logger
@@ -146,10 +156,19 @@ def main():
         "--header_start_index", required=False, type=int,
         default=2,
     )
+    ap.add_argument(
+        "--before_md", required=False,
+        default='before.md',
+    )
+    ap.add_argument(
+        "--after_md", required=False,
+        default='after.md',
+    )
     args = vars(ap.parse_args())
     paper_dict_list = load_paper_dicts(args['paper_dir'])
     paper_dict_list = parse_paper_dicts(paper_dict_list)
-    generate_output_md(paper_dict_list, args['output_md'], args['header_start_index'])
+    generate_output_md(paper_dict_list, args['output_md'], args['header_start_index'],
+                       before_md=args['before_md'], after_md=args['after_md'])
 
 
 if __name__ == '__main__':
