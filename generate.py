@@ -48,7 +48,8 @@ class PaperParser:
             journal = paper_info['booktitle']
 
         paper_str = '- [{title}]({url}) - {author}, {journal}, ({year})'.format(
-            title=paper_info['title'], url=paper_info['url'], author=paper_info['author'],
+            title=paper_info['title'].replace('{', '').replace('}', ''),
+            url=paper_info['url'], author=paper_info['author'],
             journal=journal, year=paper_info['year'])
 
         return paper_str
