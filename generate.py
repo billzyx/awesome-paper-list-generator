@@ -4,6 +4,20 @@ from title2bib.crossref import get_bib_from_title
 from pdfrw import PdfReader
 from bibtexparser.bparser import BibTexParser
 import re
+import logging
+
+logger = None
+
+
+def init_logging():
+    logger_init = logging.getLogger()
+    formatter = logging.Formatter("%(asctime)s;%(levelname)s    %(message)s")
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setFormatter(formatter)
+    logger_init.addHandler(stream_handler)
+    logger_init.setLevel(logging.DEBUG)
+    return logger_init
 
 
 def load_paper_dicts(root_dir):
@@ -81,10 +95,11 @@ def parse_paper_dicts(paper_dict_list):
         paper_list = paper_dict_list[i]['paper_list']
         for paper_path in paper_list:
             try:
+                logging.info('Getting paper:' + paper_path)
                 paper_str = paper_parser.parse(paper_path)
                 paper_info_list.append(paper_str)
             except:
-                print('Error getting paper:', paper_path)
+                logger.warning('Error getting paper: ' + paper_path)
         paper_dict_list[i]['paper_info_list'] = paper_info_list
     return paper_dict_list
 
@@ -116,6 +131,9 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
 
 
 def main():
+    global logger
+    logger = init_logging()
+    logger.info('Started.')
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--paper_dir", required=True,
