@@ -45,7 +45,7 @@ def sort_items_by_title(items, title):
 
 def get_from_title(title, get_first=False):
     found = False
-    params = {"query.bibliographic": title, "rows": 20}
+    params = {"query.bibliographic": title, "rows": 1}
     r = find_cross_info(params)
     items = r.json()["message"]["items"]
     for i, item in enumerate(items):
@@ -63,11 +63,12 @@ def get_from_title(title, get_first=False):
         
         items[i] = item
 
-    if len(items) == 0:
-        found_arxiv,  arxiv_items = get_arxiv_info(title, field="ti")
-        for arxiv_item in arxiv_items:
-            arxiv_item["is_crossref"] = False
-            items.append(arxiv_item)
+    found_arxiv,  arxiv_items = get_arxiv_info(title, field="ti")
+    for arxiv_item in arxiv_items:
+        arxiv_item["is_crossref"] = False
+        items.append(arxiv_item)
+        if arxiv_item["title"] == title:
+            return True, arxiv_item
 
     if r.status_code == 200 and len(items) > 0:
         items = sort_items_by_title(items, title)

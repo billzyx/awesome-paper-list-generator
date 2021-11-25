@@ -42,7 +42,7 @@ class PaperParser:
         return paper_info
 
     def _get_paper_string_md(self, paper_info):
-        if hasattr(paper_info, 'journal'):
+        if 'journal' in paper_info:
             journal = paper_info['journal'].replace('{', '').replace('}', '')
         else:
             journal = paper_info['booktitle']
@@ -60,8 +60,6 @@ class PaperParser:
         paper_info = self._get_paper_info(paper_bib)
         paper_str = self._get_paper_string_md(paper_info)
         return paper_str
-
-
 
 
 def parse_paper_dicts(paper_dict_list):
