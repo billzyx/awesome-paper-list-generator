@@ -1,10 +1,8 @@
 import os
 import argparse
-from title2bib.crossref import get_bib_from_title
-from pdfrw import PdfReader
-from bibtexparser.bparser import BibTexParser
-import re
 import logging
+
+from paper_parser import PaperParser
 
 logger = None
 
@@ -34,60 +32,6 @@ def load_paper_dicts(root_dir):
     return paper_dict_list
 
 
-class PaperParser:
-    def _get_paper_title(self, file_path):
-        # Use filename as paper title if get filename from pdf failed.
-        reader = PdfReader(file_path)
-        pdf_title = str(reader.Info.Title)
-        if pdf_title is None or pdf_title == '' or pdf_title == '()' or pdf_title == 'None' or pdf_title == '(Untitled)':
-            pdf_title = ''
-        else:
-            pdf_title = pdf_title.strip('()')
-        file_title = os.path.basename(file_path).replace('.pdf', '')
-        return pdf_title, file_title
-
-    def _get_bib_string(self, title):
-        _, bib = get_bib_from_title(title, get_first=True, abbrev_journal=False)
-        return bib
-
-    def _get_paper_info(self, bib):
-        bib_tex_parser = BibTexParser()
-        bib_database = bib_tex_parser.parse(bib)
-
-        paper_info = bib_database.entries[0]
-        return paper_info
-
-    def _get_paper_string_md(self, paper_info):
-        if 'journal' in paper_info:
-            journal = paper_info['journal'].replace('{', '').replace('}', '')
-        elif 'booktitle' in paper_info:
-            journal = paper_info['booktitle']
-        else:
-            journal = ''
-
-        paper_str = '- [{title}]({url}) - {author}, {journal}, ({year})'.format(
-            title=re.sub("[^\\-0-9a-zA-Z ]+", "", paper_info['title']),
-            url=paper_info['url'], author=paper_info['author'],
-            journal=journal, year=paper_info['year'])
-
-        return paper_str
-
-    def parse(self, paper_path):
-        pdf_title, file_title = self._get_paper_title(paper_path)
-        if pdf_title != '':
-            paper_bib = self._get_bib_string(pdf_title)
-            paper_info = self._get_paper_info(paper_bib)
-            if paper_info['title'] != pdf_title:
-                paper_bib = self._get_bib_string(file_title)
-                paper_info = self._get_paper_info(paper_bib)
-        else:
-            paper_bib = self._get_bib_string(file_title)
-            paper_info = self._get_paper_info(paper_bib)
-        paper_str = self._get_paper_string_md(paper_info)
-        paper_info['paper_str_md'] = paper_str
-        return paper_info
-
-
 def parse_paper_dicts(paper_dict_list):
     paper_parser = PaperParser()
     for i in range(len(paper_dict_list)):
@@ -111,6 +55,7 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
             with open(before_md, 'r') as fb:
                 lines = fb.readlines()
                 f.writelines(lines)
+                f.write('\n')
         f.write('## Papers\n')
         pre_classes = ['']
         for paper_dict in paper_dict_list:
@@ -137,6 +82,7 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
             with open(after_md, 'r') as fa:
                 lines = fa.readlines()
                 f.writelines(lines)
+                f.write('\n')
 
 
 def main():
