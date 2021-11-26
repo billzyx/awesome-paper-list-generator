@@ -58,14 +58,15 @@ class PaperParser:
     def parse(self, paper_path):
         pdf_title, file_title = self._get_paper_title(paper_path)
         for paper_info in self.bib_database.entries:
-            if paper_info['title_from_file'] == pdf_title or paper_info['title_from_file'] == file_title:
+            if paper_info['title_from_file'].lower() == pdf_title.lower() or\
+                    paper_info['title_from_file'].lower() == file_title.lower():
                 return paper_info
         use_file_title = False
         title_from_file = pdf_title
         if pdf_title != '':
             paper_bib = self._get_bib_string(pdf_title)
             paper_info = self._get_paper_info(paper_bib)
-            if paper_info['title'] != pdf_title:
+            if paper_info['title'].lower() != pdf_title.lower():
                 use_file_title = True
         else:
             use_file_title = True
