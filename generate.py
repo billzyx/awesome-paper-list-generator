@@ -57,14 +57,14 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
                 lines = fb.readlines()
                 f.writelines(lines)
                 f.write('\n')
-        f.write('## Papers\n')
+        f.write('#' * header_start_index + ' Papers\n')
         pre_classes = ['']
         for paper_dict in paper_dict_list:
             classes = paper_dict['classes']
             classes_print = [x for x in classes if x not in pre_classes]
             for paper_class in classes_print:
                 header_index = classes.index(paper_class) + header_start_index
-                title = '#' * (header_index) + ' ' + paper_class
+                title = '#' * header_index + ' ' + paper_class
                 f.write(title)
                 f.write('\n')
             paper_info_list = paper_dict['paper_info_list']
