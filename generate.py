@@ -33,8 +33,8 @@ def load_paper_dicts(root_dir):
     return paper_dict_list
 
 
-def parse_paper_dicts(paper_dict_list):
-    paper_parser = PaperParser()
+def parse_paper_dicts(paper_dict_list, update_paper_info=False):
+    paper_parser = PaperParser(update_paper_info=update_paper_info)
     for i in range(len(paper_dict_list)):
         paper_info_list = []
         paper_list = paper_dict_list[i]['paper_list']
@@ -118,9 +118,13 @@ def main():
         "--after_md", required=False,
         default='after.md',
     )
+    ap.add_argument(
+        "--update_paper_info", required=False, action='store_true',
+        default=False,
+    )
     args = vars(ap.parse_args())
     paper_dict_list = load_paper_dicts(args['paper_dir'])
-    paper_dict_list = parse_paper_dicts(paper_dict_list)
+    paper_dict_list = parse_paper_dicts(paper_dict_list, update_paper_info=args['update_paper_info'])
     generate_output_md(paper_dict_list, args['output_md'], args['header_start_index'],
                        before_md=args['before_md'], after_md=args['after_md'])
 

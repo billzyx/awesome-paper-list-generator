@@ -6,8 +6,8 @@ from semantic_scholar_api import SemanticScholar
 
 
 class PaperParser:
-    def __init__(self, temp_json_file_path='temp.json'):
-        if os.path.isfile(temp_json_file_path):
+    def __init__(self, temp_json_file_path='temp.json', update_paper_info=False):
+        if os.path.isfile(temp_json_file_path) and not update_paper_info:
             with open(temp_json_file_path) as json_file:
                 self.json_database = json.load(json_file)
         else:
@@ -45,10 +45,10 @@ class PaperParser:
             url = 'https://doi.org/{}'.format(paper_info['doi'])
         elif paper_info['arxivId']:
             url = 'https://arxiv.org/abs/{}'.format(paper_info['arxivId'])
-        paper_str = '- [{title}]({url}) - {author}, {journal}, ({year})'.format(
+        paper_str = '- [{title}]({url}) - {author}, {journal}, ({year}), Cited By: {cited_by}'.format(
             title=paper_info['title'],
             url=url, author=author_str,
-            journal=paper_info['venue'], year=paper_info['year'])
+            journal=paper_info['venue'], year=paper_info['year'], cited_by=paper_info['numCitedBy'])
 
         return paper_str
 

@@ -21,6 +21,7 @@ $ python generate.py --paper_dir "/your/paper/dir"
 - --header_start_index Start index of headers
 - --before_md Markdown file before the paper section
 - --after_md Markdown file after the paper section
+- --update_paper_info Update the latest paper info instead of the fetched temp file (temp.json). You may also delete the temp.json to do the same job. Note that Semantic Scholar API has a limit of 100 requests per 5 minutes. 
 
 ## Acknowledgements
 
