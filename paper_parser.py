@@ -1,23 +1,23 @@
-from title2bib.crossref import get_bib_from_title
 from pdfrw import PdfReader
-from bibtexparser.bibdatabase import BibDatabase
-import bibtexparser
-import re
 import os
+import json
+
+from semantic_scholar_api import SemanticScholar
 
 
 class PaperParser:
-    def __init__(self, temp_bib_file_path='temp.bib'):
-        if os.path.isfile(temp_bib_file_path):
-            with open(temp_bib_file_path) as bibtex_file:
-                self.bib_database = bibtexparser.load(bibtex_file)
+    def __init__(self, temp_json_file_path='temp.json'):
+        if os.path.isfile(temp_json_file_path):
+            with open(temp_json_file_path) as json_file:
+                self.json_database = json.load(json_file)
         else:
-            self.bib_database = BibDatabase()
-        self.temp_bib_file_path = temp_bib_file_path
+            self.json_database = []
+        self.temp_json_file_path = temp_json_file_path
+        self.semantic_scholar = SemanticScholar()
 
-    def _save_bib_database(self):
-        with open(self.temp_bib_file_path, 'w') as bibtex_file:
-            bibtexparser.dump(self.bib_database, bibtex_file)
+    def _save_json_database(self):
+        with open(self.temp_json_file_path, 'w') as json_file:
+            json.dump(self.json_database, json_file, indent=4)
 
     def _get_paper_title(self, file_path):
         # Use filename as paper title if get filename from pdf failed.
@@ -30,45 +30,40 @@ class PaperParser:
         file_title = os.path.basename(file_path).replace('.pdf', '')
         return pdf_title, file_title
 
-    def _get_bib_string(self, title):
-        found, bib = get_bib_from_title(title, get_first=True, abbrev_journal=False)
-        if not found:
+    def _get_paper_info(self, paper_title):
+        search_result = self.semantic_scholar.search(paper_title)
+        if search_result['total'] == 0:
             return None
-        return bib
-
-    def _get_paper_info(self, bib):
-        bib_database = bibtexparser.loads(bib)
-
-        paper_info = bib_database.entries[0]
+        paper_id = search_result['data'][0]['paperId']
+        paper_info = self.semantic_scholar.paper(paper_id)
         return paper_info
 
     def _get_paper_string_md(self, paper_info):
-        if 'journal' in paper_info:
-            journal = paper_info['journal'].replace('{', '').replace('}', '')
-        elif 'booktitle' in paper_info:
-            journal = paper_info['booktitle']
-        else:
-            journal = ''
-
+        author_str = ' '.join([author['name'] for author in paper_info['authors']])
+        url = paper_info['url']
+        if paper_info['doi']:
+            url = 'https://doi.org/{}'.format(paper_info['doi'])
+        elif paper_info['arxivId']:
+            url = 'https://arxiv.org/abs/{}'.format(paper_info['arxivId'])
         paper_str = '- [{title}]({url}) - {author}, {journal}, ({year})'.format(
-            title=re.sub("[^\\-0-9a-zA-Z ]+", "", paper_info['title']),
-            url=paper_info['url'], author=paper_info['author'],
-            journal=journal, year=paper_info['year'])
+            title=paper_info['title'],
+            url=url, author=author_str,
+            journal=paper_info['venue'], year=paper_info['year'])
 
         return paper_str
 
     def parse(self, paper_path):
         pdf_title, file_title = self._get_paper_title(paper_path)
-        for paper_info in self.bib_database.entries:
+        for paper_info in self.json_database:
             if paper_info['title_from_file'].lower() == pdf_title.lower() or\
                     paper_info['title_from_file'].lower() == file_title.lower():
+                paper_info['paper_str_md'] = self._get_paper_string_md(paper_info)
                 return paper_info
         use_file_title = False
         title_from_file = pdf_title
         if pdf_title != '':
-            paper_bib = self._get_bib_string(pdf_title)
-            if paper_bib is not None:
-                paper_info = self._get_paper_info(paper_bib)
+            paper_info = self._get_paper_info(pdf_title)
+            if paper_info is not None:
                 if paper_info['title'].lower() != pdf_title.lower():
                     use_file_title = True
             else:
@@ -76,12 +71,10 @@ class PaperParser:
         else:
             use_file_title = True
         if use_file_title:
-            paper_bib = self._get_bib_string(file_title)
-            paper_info = self._get_paper_info(paper_bib)
+            paper_info = self._get_paper_info(file_title)
             title_from_file = file_title
         paper_info['title_from_file'] = title_from_file
-        paper_str = self._get_paper_string_md(paper_info)
-        paper_info['paper_str_md'] = paper_str
-        self.bib_database.entries.append(paper_info)
-        self._save_bib_database()
+        self.json_database.append(paper_info)
+        self._save_json_database()
+        paper_info['paper_str_md'] = self._get_paper_string_md(paper_info)
         return paper_info

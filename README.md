@@ -24,4 +24,4 @@ $ python generate.py --paper_dir "/your/paper/dir"
 
 ## Acknowledgements
 
-Some code forked from https://github.com/bibcure/title2bib
+Some code forked from https://github.com/danielnsilva/semanticscholar
