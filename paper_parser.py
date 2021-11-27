@@ -31,7 +31,9 @@ class PaperParser:
         return pdf_title, file_title
 
     def _get_bib_string(self, title):
-        _, bib = get_bib_from_title(title, get_first=True, abbrev_journal=False)
+        found, bib = get_bib_from_title(title, get_first=True, abbrev_journal=False)
+        if not found:
+            return None
         return bib
 
     def _get_paper_info(self, bib):
@@ -65,8 +67,11 @@ class PaperParser:
         title_from_file = pdf_title
         if pdf_title != '':
             paper_bib = self._get_bib_string(pdf_title)
-            paper_info = self._get_paper_info(paper_bib)
-            if paper_info['title'].lower() != pdf_title.lower():
+            if paper_bib is not None:
+                paper_info = self._get_paper_info(paper_bib)
+                if paper_info['title'].lower() != pdf_title.lower():
+                    use_file_title = True
+            else:
                 use_file_title = True
         else:
             use_file_title = True
