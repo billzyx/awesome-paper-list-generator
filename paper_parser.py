@@ -39,7 +39,7 @@ class PaperParser:
         return paper_info
 
     def _get_paper_string_md(self, paper_info):
-        author_str = ' '.join([author['name'] for author in paper_info['authors']])
+        author_str = ', '.join([author['name'] for author in paper_info['authors']])
         url = paper_info['url']
         if paper_info['doi']:
             url = 'https://doi.org/{}'.format(paper_info['doi'])
