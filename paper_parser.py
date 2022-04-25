@@ -1,6 +1,7 @@
 from pdfrw import PdfReader
 import os
 import json
+import re
 
 from semantic_scholar_api import SemanticScholar
 
@@ -31,10 +32,17 @@ class PaperParser:
         return pdf_title, file_title
 
     def _get_paper_info(self, paper_title):
+        def filter_title(title_str):
+            title_str = re.sub(r'[^a-zA-Z0-9]', '', title_str)
+            return title_str.lower()
         search_result = self.semantic_scholar.search(paper_title)
         if search_result['total'] == 0:
             return None
         paper_id = search_result['data'][0]['paperId']
+        # Match title. Sometimes the first result is incorrect.
+        for data in reversed(search_result['data']):
+            if filter_title(data['title']) == filter_title(paper_title):
+                paper_id = data['paperId']
         paper_info = self.semantic_scholar.paper(paper_id)
         return paper_info
 

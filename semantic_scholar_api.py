@@ -8,7 +8,7 @@ from tenacity import (retry,
 class SemanticScholar:
     DEFAULT_API_URL = 'https://api.semanticscholar.org/v1'
     DEFAULT_PARTNER_API_URL = 'https://partner.semanticscholar.org/v1'
-    DEFAULT_GRAPH_API_URL = 'http://api.semanticscholar.org/graph/v1'
+    DEFAULT_GRAPH_API_URL = 'https://api.semanticscholar.org/graph/v1'
 
     auth_header = {}
 
