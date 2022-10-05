@@ -23,6 +23,11 @@ $ python generate.py --paper_dir "/your/paper/dir"
 - --after_md Markdown file after the paper section
 - --update_paper_info Update the latest paper info instead of using the fetched temp file (temp.json). You may also delete the temp.json to do the same job. Note that Semantic Scholar API has a limit of 100 requests per 5 minutes. 
 
+## Miscellaneous
+- For Table of contents in "before.md", you may use [GitHub Wiki TOC generator](https://ecotrust-canada.github.io/markdown-toc/)
+
+
+
 ## Acknowledgements
 
 Some code forked from https://github.com/danielnsilva/semanticscholar
