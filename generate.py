@@ -66,6 +66,7 @@ def generate_output_md(paper_dict_list, output_md='paper.md', header_start_index
             for paper_class in classes_print:
                 header_index = classes.index(paper_class) + header_start_index
                 title = '#' * header_index + ' ' + paper_class
+                f.write('\n')
                 f.write(title)
                 f.write('\n')
             paper_info_list = paper_dict['paper_info_list']
