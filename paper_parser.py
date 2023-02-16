@@ -22,20 +22,26 @@ class PaperParser:
 
     def _get_paper_title(self, file_path):
         # Use filename as paper title if get filename from pdf failed.
-        reader = PdfReader(file_path)
+        file_title = os.path.basename(file_path).replace('.pdf', '')
+        try:
+            reader = PdfReader(file_path)
+        except:
+            return '', file_title
         pdf_title = str(reader.Info.Title)
         if pdf_title is None or pdf_title == '' or pdf_title == '()' or pdf_title == 'None' or pdf_title == '(Untitled)':
             pdf_title = ''
         else:
             pdf_title = pdf_title.strip('()')
-        file_title = os.path.basename(file_path).replace('.pdf', '')
         return pdf_title, file_title
 
     def _get_paper_info(self, paper_title):
         def filter_title(title_str):
-            title_str = re.sub(r'[^a-zA-Z0-9]', '', title_str)
+            title_str = re.sub(r'[^a-zA-Z0-9 ]', ' ', title_str)
             return title_str.lower()
-        search_result = self.semantic_scholar.search(paper_title)
+        try:
+            search_result = self.semantic_scholar.search(filter_title(paper_title))
+        except:
+            return None
         if search_result['total'] == 0:
             return None
         paper_id = search_result['data'][0]['paperId']
