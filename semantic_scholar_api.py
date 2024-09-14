@@ -39,7 +39,7 @@ class SemanticScholar:
         if api_key:
             self.auth_header = {'x-api-key': api_key}
             if not api_url:
-                self.api_url = self.DEFAULT_PARTNER_API_URL
+                self.api_url = self.DEFAULT_API_URL
 
         self.timeout = timeout
 
@@ -76,7 +76,7 @@ class SemanticScholar:
     )
     def search(self, query):
         data = {}
-        url = '{}/paper/search?query={}'.format(self.api_graph_url, query)
+        url = '{}/paper/search/match?query={}'.format(self.api_graph_url, query)
         r = requests.get(url, timeout=self.timeout, headers=self.auth_header)
 
         if r.status_code == 200:

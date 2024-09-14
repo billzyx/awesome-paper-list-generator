@@ -7,14 +7,14 @@ from semantic_scholar_api import SemanticScholar
 
 
 class PaperParser:
-    def __init__(self, temp_json_file_path='temp.json', update_paper_info=False):
+    def __init__(self, temp_json_file_path='temp.json', update_paper_info=False, semantic_scholar_api_key=None):
         if os.path.isfile(temp_json_file_path) and not update_paper_info:
             with open(temp_json_file_path) as json_file:
                 self.json_database = json.load(json_file)
         else:
             self.json_database = []
         self.temp_json_file_path = temp_json_file_path
-        self.semantic_scholar = SemanticScholar()
+        self.semantic_scholar = SemanticScholar(api_key=semantic_scholar_api_key)
 
     def _save_json_database(self):
         with open(self.temp_json_file_path, 'w') as json_file:
@@ -39,10 +39,10 @@ class PaperParser:
             title_str = re.sub(r'[^a-zA-Z0-9 ]', ' ', title_str)
             return title_str.lower()
         try:
-            search_result = self.semantic_scholar.search(filter_title(paper_title))
+            search_result = self.semantic_scholar.search(paper_title)
+            if len(search_result) == 0:
+                return None
         except:
-            return None
-        if search_result['total'] == 0:
             return None
         paper_id = search_result['data'][0]['paperId']
         # Match title. Sometimes the first result is incorrect.
